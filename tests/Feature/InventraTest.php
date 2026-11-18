@@ -158,6 +158,44 @@ class InventraTest extends TestCase
         $this->assertSame($before, $stock->fresh()->qty_available);
     }
 
+    public function test_individual_asset_cannot_be_loaned_twice(): void
+    {
+        $guru = User::where('email', 'guru@inventra.sch.id')->firstOrFail();
+        $admin = User::where('email', 'admin@inventra.sch.id')->firstOrFail();
+
+        $asset = Asset::query()
+            ->whereHas('category', fn ($query) => $query->where('tracking_type', 'individual'))
+            ->where('status', 'tersedia')
+            ->whereDoesntHave('loans', fn ($query) => $query->whereIn('status', ['menunggu', 'disetujui', 'dipinjam']))
+            ->firstOrFail();
+
+        $payload = [
+            'asset_id' => $asset->id,
+            'quantity' => 1,
+            'purpose' => 'Uji peminjaman individual',
+            'start_date' => now()->toDateString(),
+            'due_date' => now()->addDays(2)->toDateString(),
+        ];
+
+        $this->actingAs($guru)->post('/peminjaman', $payload)->assertRedirect();
+        $loan = Loan::where('asset_id', $asset->id)->latest('id')->firstOrFail();
+
+        $this->actingAs($guru)
+            ->post('/peminjaman', [...$payload, 'purpose' => 'Uji duplikat individual'])
+            ->assertSessionHasErrors('asset_id');
+        $this->assertSame(1, Loan::where('asset_id', $asset->id)->count());
+
+        $this->actingAs($guru)
+            ->post('/peminjaman', [...$payload, 'quantity' => 2, 'purpose' => 'Uji jumlah individual'])
+            ->assertSessionHasErrors('quantity');
+
+        $this->actingAs($admin)
+            ->post("/peminjaman/{$loan->id}/approve")
+            ->assertRedirect();
+
+        $this->assertSame('dipinjam', $loan->fresh()->status);
+    }
+
     public function test_audit_log_records_actions_with_labels(): void
     {
         $admin = User::where('email', 'admin@inventra.sch.id')->firstOrFail();

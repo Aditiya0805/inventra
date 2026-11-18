@@ -136,7 +136,7 @@ class LoanController extends Controller
         }
 
         $asset = Asset::with('stock')->findOrFail($loan->asset_id);
-        $this->assertAvailable($asset, $loan->quantity);
+        $this->assertAvailable($asset, $loan->quantity, $loan->id);
 
         $loan->update([
             'status' => 'dipinjam',
@@ -194,7 +194,7 @@ class LoanController extends Controller
         return back()->with('success', 'Pengajuan peminjaman dihapus.');
     }
 
-    private function assertAvailable(Asset $asset, int $quantity): void
+    private function assertAvailable(Asset $asset, int $quantity, ?int $ignoreLoanId = null): void
     {
         if ($asset->isBulk()) {
             $available = $asset->stock?->qty_available ?? 0;
@@ -203,9 +203,30 @@ class LoanController extends Controller
                     'quantity' => "Jumlah tersedia hanya {$available} unit.",
                 ]);
             }
-        } elseif ($asset->status !== 'tersedia') {
+
+            return;
+        }
+
+        if ($quantity !== 1) {
+            throw ValidationException::withMessages([
+                'quantity' => 'Aset individual hanya dapat dipinjam sebanyak 1 unit.',
+            ]);
+        }
+
+        if ($asset->status !== 'tersedia') {
             throw ValidationException::withMessages([
                 'asset_id' => 'Aset ini sedang tidak tersedia untuk dipinjam.',
+            ]);
+        }
+
+        $hasActiveLoan = $asset->loans()
+            ->whereIn('status', ['menunggu', 'disetujui', 'dipinjam'])
+            ->when($ignoreLoanId, fn ($query) => $query->whereKeyNot($ignoreLoanId))
+            ->exists();
+
+        if ($hasActiveLoan) {
+            throw ValidationException::withMessages([
+                'asset_id' => 'Aset ini sedang dipinjam atau menunggu persetujuan.',
             ]);
         }
     }
