@@ -132,7 +132,7 @@ export default function AssetShow({ asset, qrUrl, mutations, loans, tickets, roo
             )}
 
             <div className="mt-5 grid gap-5 xl:grid-cols-3">
-                <div className="space-y-5 xl:col-span-2">
+                <div className="min-w-0 space-y-5 xl:col-span-2">
                     <Card className="overflow-hidden">
                         <div className="flex flex-col gap-5 p-5 sm:flex-row">
                             <div className="grid h-32 w-full shrink-0 place-items-center overflow-hidden rounded-2xl bg-slate-100 text-slate-300 sm:w-40">

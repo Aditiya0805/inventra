@@ -96,7 +96,7 @@ export default function AssetScan({ recent }) {
             />
 
             <div className="grid gap-5 xl:grid-cols-3">
-                <div className="space-y-5 xl:col-span-2">
+                <div className="min-w-0 space-y-5 xl:col-span-2">
                     <Card className="overflow-hidden">
                         <CardHeader
                             title="Kamera pemindai"

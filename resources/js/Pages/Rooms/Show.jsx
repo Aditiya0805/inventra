@@ -84,7 +84,7 @@ export default function RoomShow({ room, assets, summary, byCategory, bookings, 
             </div>
 
             <div className="mt-5 grid gap-5 xl:grid-cols-3">
-                <div className="space-y-5 xl:col-span-2">
+                <div className="min-w-0 space-y-5 xl:col-span-2">
                     <Card>
                         <CardHeader title="Informasi ruangan" description="Detail fasilitas dan penanggung jawab" icon={DoorOpen} />
                         <div className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">

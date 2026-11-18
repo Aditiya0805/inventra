@@ -103,8 +103,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:super_admin,admin_sarpras,viewer')->group(function () {
         Route::get('/laporan', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/laporan/export', [ReportController::class, 'export'])->name('reports.export');
-        Route::get('/log-aktivitas', [AuditLogController::class, 'index'])->name('audit.index');
     });
+    Route::get('/log-aktivitas', [AuditLogController::class, 'index'])->name('audit.index')->middleware('role:super_admin,admin_sarpras');
 
     // Notifikasi
     Route::get('/notifikasi', [NotificationController::class, 'index'])->name('notifications.index');

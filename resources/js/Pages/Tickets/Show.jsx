@@ -85,7 +85,7 @@ export default function TicketShow({ ticket, technicians, statuses, urgencies, t
             />
 
             <div className="grid gap-5 xl:grid-cols-3">
-                <div className="space-y-5 xl:col-span-2">
+                <div className="min-w-0 space-y-5 xl:col-span-2">
                     <Card>
                         <CardHeader title="Detail kerusakan" description="Laporan dari pengguna" icon={Wrench} />
                         <div className="p-5">

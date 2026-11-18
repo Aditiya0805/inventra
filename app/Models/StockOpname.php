@@ -38,7 +38,7 @@ class StockOpname extends Model
     public static function generateCode(): string
     {
         $last = static::query()->orderByDesc('id')->first();
-        $number = $last ? ((int) preg_replace('/\D/', '', $last->code)) + 1 : 1;
+        $number = $last && preg_match('/-(\d+)$/', $last->code, $matches) ? ((int) $matches[1]) + 1 : 1;
 
         return 'OPN-'.now()->format('Ym').'-'.str_pad((string) $number, 3, '0', STR_PAD_LEFT);
     }

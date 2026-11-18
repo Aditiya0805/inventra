@@ -64,7 +64,7 @@ export default function AssetForm({ asset, categories, rooms, statuses, selected
             />
 
             <form onSubmit={submit} className="grid gap-5 xl:grid-cols-3">
-                <div className="space-y-5 xl:col-span-2">
+                <div className="min-w-0 space-y-5 xl:col-span-2">
                     <Card>
                         <CardHeader title="Informasi utama" description="Identitas aset dan lokasi penyimpanan" icon={Boxes} />
                         <div className="grid gap-4 p-5 sm:grid-cols-2">
