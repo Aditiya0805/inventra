@@ -43,7 +43,7 @@ class InventraTest extends TestCase
 
     public function test_role_based_access_is_enforced(): void
     {
-        $viewer = User::where('email', 'viewer@inventra.sch.id')->firstOrFail();
+        $viewer = User::where('role', 'viewer')->firstOrFail();
         $guru = User::where('email', 'guru@inventra.sch.id')->firstOrFail();
         $admin = User::where('email', 'admin@inventra.sch.id')->firstOrFail();
 
