@@ -221,7 +221,7 @@ export default function AppLayout({ title, subtitle, children, actions }) {
 
             {/* Main */}
             <div className="lg:pl-64">
-                <header className="no-print sticky top-0 z-20 border-b border-slate-200/70 bg-white/85 backdrop-blur-md">
+                <header className="no-print sticky top-0 z-20 border-b border-white/60 bg-white/70 backdrop-blur-2xl shadow-[0_4px_20px_-2px_rgba(15,23,42,0.03),inset_0_1px_0_0_rgba(255,255,255,0.85)]">
                     <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
                         <button
                             type="button"
