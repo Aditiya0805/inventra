@@ -310,7 +310,7 @@ export default function SettingsIndex({ tab, settings, users, buildings, categor
                             <CardHeader title="Pratinjau identitas" description="Tampilan pada dokumen" icon={SettingsIcon} />
                             <div className="p-5">
                                 <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-brand-50 to-white p-4 text-center">
-                                    <span className="mx-auto grid size-12 place-items-center rounded-xl bg-brand-700 text-lg font-black text-white">I</span>
+                                    <img src="/images/logo-mambalam.png" alt="Logo" className="mx-auto size-14 object-contain rounded-xl bg-white p-1 border border-slate-200 shadow-sm" />
                                     <p className="mt-2 text-sm font-bold text-slate-900">{profileForm.data.school_name || 'Nama sekolah'}</p>
                                     <p className="mt-1 text-[10px] leading-relaxed text-slate-500">{profileForm.data.school_address || 'Alamat sekolah'}</p>
                                     <div className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1 border-t border-slate-200/70 pt-3 text-[10px] text-slate-500">

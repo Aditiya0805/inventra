@@ -17,16 +17,16 @@ class SettingController extends Controller
     public function index(Request $request): Response
     {
         $defaults = [
-            'school_name' => 'SMP Negeri 1 Nusantara',
-            'school_address' => 'Jl. Pendidikan No. 1, Nusantara',
-            'npsn' => '20301234',
-            'headmaster' => 'Dr. Sri Wahyuni, M.Pd.',
+            'school_name' => 'MA Muhammadiyah Bandar Lampung',
+            'school_address' => 'Jl. Pulau Sangiang RT 07 LK II, Sukarame, Kota Bandar Lampung, Lampung 35131',
+            'npsn' => '10648361',
+            'headmaster' => 'Hadi Sururudin, S.Pd.I., M.Pd.',
             'academic_year' => '2026/2027',
             'alert_threshold' => '15',
             'loan_reminder_days' => '2',
             'email_notifications' => '1',
-            'school_phone' => '(021) 555-0123',
-            'school_email' => 'info@smpn1nusantara.sch.id',
+            'school_phone' => '0852-2885-9634',
+            'school_email' => 'info@mambalam.sch.id',
         ];
 
         return Inertia::render('Settings/Index', [

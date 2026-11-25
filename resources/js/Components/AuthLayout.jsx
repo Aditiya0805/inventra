@@ -13,10 +13,10 @@ export default function AuthLayout({ children, title, description }) {
 
                 <div className="relative">
                     <Link href="/" className="inline-flex items-center gap-3">
-                        <span className="grid size-11 place-items-center rounded-2xl bg-brand-600 text-lg font-black shadow-lg shadow-brand-950/50">I</span>
+                        <img src="/images/logo-mambalam.png" alt="MA Muhammadiyah Bandar Lampung" className="size-11 rounded-2xl object-contain bg-white p-1 shadow-lg shadow-brand-950/50" />
                         <div>
                             <p className="text-lg font-bold tracking-tight">Inventra</p>
-                            <p className="text-[11px] font-medium tracking-wide text-brand-200/60">Dashboard Monitoring Aset Sekolah</p>
+                            <p className="text-[11px] font-medium tracking-wide text-brand-200/60">MA Muhammadiyah Bandar Lampung</p>
                         </div>
                     </Link>
 
@@ -56,7 +56,7 @@ export default function AuthLayout({ children, title, description }) {
             <div className="flex flex-1 flex-col">
                 <div className="flex items-center justify-between px-6 py-5 lg:px-10">
                     <Link href="/" className="flex items-center gap-2.5 lg:hidden">
-                        <span className="grid size-9 place-items-center rounded-xl bg-brand-700 text-sm font-black text-white">I</span>
+                        <img src="/images/logo-mambalam.png" alt="MA Muhammadiyah Bandar Lampung" className="size-9 rounded-xl object-contain bg-white p-0.5 border border-slate-200" />
                         <span className="text-base font-bold text-slate-900">Inventra</span>
                     </Link>
                     <Link

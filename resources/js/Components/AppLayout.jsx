@@ -150,12 +150,10 @@ export default function AppLayout({ title, subtitle, children, actions }) {
             >
                 <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-white/5 px-5">
                     <Link href="/dashboard" className="flex items-center gap-2.5">
-                        <span className="grid size-9 place-items-center rounded-xl bg-brand-600 shadow-lg shadow-brand-950/40">
-                            <span className="text-base font-black tracking-tighter">I</span>
-                        </span>
+                        <img src="/images/logo-mambalam.png" alt="MA Muhammadiyah Bandar Lampung" className="size-9 rounded-xl object-contain bg-white p-0.5 shadow-md shadow-brand-950/40" />
                         <div className="leading-tight">
                             <p className="text-[15px] font-bold tracking-tight">Inventra</p>
-                            <p className="text-[10px] font-medium tracking-wide text-brand-200/60">Asset Monitoring</p>
+                            <p className="text-[10px] font-medium tracking-wide text-brand-200/60 truncate max-w-[140px]">MAM Bandar Lampung</p>
                         </div>
                     </Link>
                     <button

@@ -41,7 +41,7 @@
             <div class="label">
                 <img src="{{ route('assets.qr', $asset) }}" alt="QR {{ $asset->code }}">
                 <div class="meta">
-                    <div class="brand">Inventra · {{ $asset->category?->name }}</div>
+                    <div class="brand">MAM Balam · {{ $asset->category?->name }}</div>
                     <div class="name">{{ $asset->name }}</div>
                     <div class="code">{{ $asset->code }}</div>
                     <div class="room">{{ $asset->room?->name ?? 'Tanpa ruangan' }}@if($asset->room?->building) · {{ $asset->room->building->name }}@endif</div>

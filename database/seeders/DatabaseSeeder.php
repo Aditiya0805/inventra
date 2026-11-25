@@ -70,11 +70,11 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $viewer = User::create([
-            'name' => 'Yayasan Nusantara',
-            'email' => 'viewer@inventra.sch.id',
+            'name' => 'Majelis Dikdasmen Muhammadiyah',
+            'email' => 'dikdasmen@mambalam.sch.id',
             'password' => Hash::make('password'),
             'role' => 'viewer',
-            'job_title' => 'Auditor Yayasan',
+            'job_title' => 'Pengawas Yayasan / Majelis',
             'is_active' => true,
         ]);
 
@@ -102,27 +102,27 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $buildings = [
-            'A' => Building::create(['code' => 'A', 'name' => 'Gedung A — Kelas 7 & 8', 'floors_count' => 3, 'notes' => 'Ruang kelas lantai 1–3']),
-            'B' => Building::create(['code' => 'B', 'name' => 'Gedung B — Laboratorium', 'floors_count' => 2, 'notes' => 'Lab komputer dan IPA']),
-            'C' => Building::create(['code' => 'C', 'name' => 'Gedung C — Fasilitas Umum', 'floors_count' => 1, 'notes' => 'Aula, kantor, perpustakaan']),
+            'A' => Building::create(['code' => 'A', 'name' => 'Gedung A — Kelas X & XI', 'floors_count' => 3, 'notes' => 'Ruang kelas lantai 1–3']),
+            'B' => Building::create(['code' => 'B', 'name' => 'Gedung B — Laboratorium & Perpustakaan', 'floors_count' => 2, 'notes' => 'Lab komputer, Lab IPA, dan Perpustakaan']),
+            'C' => Building::create(['code' => 'C', 'name' => 'Gedung C — Kantor & Fasilitas', 'floors_count' => 1, 'notes' => 'Aula, kantor kepala madrasah, ruang guru, mushola']),
         ];
 
         $rooms = collect();
         $roomSpecs = [
-            ['A101', 'Ruang 7A', 'kelas', 'A', 1, 36, 'tersedia', $guru],
-            ['A102', 'Ruang 7B', 'kelas', 'A', 1, 36, 'tersedia', $guruLain[0]],
-            ['A103', 'Ruang 8A', 'kelas', 'A', 1, 36, 'tersedia', $guruLain[1]],
-            ['A201', 'Ruang 8B', 'kelas', 'A', 2, 36, 'tersedia', $guruLain[2]],
-            ['A202', 'Ruang 9A', 'kelas', 'A', 2, 36, 'tersedia', $guruLain[3]],
-            ['A203', 'Ruang 9B', 'kelas', 'A', 2, 36, 'tersedia', $guruLain[2]],
+            ['A101', 'Ruang X-1', 'kelas', 'A', 1, 36, 'tersedia', $guru],
+            ['A102', 'Ruang X-2', 'kelas', 'A', 1, 36, 'tersedia', $guruLain[0]],
+            ['A103', 'Ruang XI-1', 'kelas', 'A', 1, 36, 'tersedia', $guruLain[1]],
+            ['A201', 'Ruang XI-2', 'kelas', 'A', 2, 36, 'tersedia', $guruLain[2]],
+            ['A202', 'Ruang XII-1', 'kelas', 'A', 2, 36, 'tersedia', $guruLain[3]],
+            ['A203', 'Ruang XII-2', 'kelas', 'A', 2, 36, 'tersedia', $guruLain[2]],
             ['B101', 'Lab Komputer', 'laboratorium', 'B', 1, 36, 'tersedia', $guruLain[1]],
             ['B102', 'Lab IPA', 'laboratorium', 'B', 1, 32, 'perawatan', $guruLain[3]],
             ['B201', 'Perpustakaan', 'perpustakaan', 'B', 2, 60, 'tersedia', $staff],
             ['C101', 'Aula Serbaguna', 'aula', 'C', 1, 200, 'tersedia', $adminSarpras],
             ['C102', 'Ruang Guru', 'ruang_guru', 'C', 1, 30, 'tersedia', $guru],
-            ['C103', 'Kantor Kepala Sekolah', 'kantor', 'C', 1, 12, 'tersedia', $superAdmin],
+            ['C103', 'Kantor Kepala Madrasah', 'kantor', 'C', 1, 12, 'tersedia', $superAdmin],
             ['C104', 'Mushola', 'mushola', 'C', 1, 50, 'tersedia', $staff],
-            ['C105', 'Kantin Sekolah', 'kantin', 'C', 1, 40, 'tersedia', $staff],
+            ['C105', 'Kantin Madrasah', 'kantin', 'C', 1, 40, 'tersedia', $staff],
         ];
 
         foreach ($roomSpecs as [$code, $name, $type, $building, $floor, $capacity, $status, $pic]) {
@@ -639,13 +639,13 @@ class DatabaseSeeder extends Seeder
 
         // ——— Pengaturan ———
         $settings = [
-            'school_name' => 'SMP Negeri 1 Nusantara',
-            'school_address' => 'Jl. Pendidikan No. 1, Kec. Nusantara, Kota Bandung 40123',
-            'npsn' => '20301234',
-            'headmaster' => 'Dr. Sri Wahyuni, M.Pd.',
+            'school_name' => 'MA Muhammadiyah Bandar Lampung',
+            'school_address' => 'Jl. Pulau Sangiang RT 07 LK II, Sukarame, Kota Bandar Lampung, Lampung 35131',
+            'npsn' => '10648361',
+            'headmaster' => 'Hadi Sururudin, S.Pd.I., M.Pd.',
             'academic_year' => '2026/2027',
-            'school_phone' => '(022) 555-0123',
-            'school_email' => 'info@smpn1nusantara.sch.id',
+            'school_phone' => '0852-2885-9634',
+            'school_email' => 'info@mambalam.sch.id',
             'alert_threshold' => '15',
             'loan_reminder_days' => '2',
             'email_notifications' => '1',
@@ -656,7 +656,7 @@ class DatabaseSeeder extends Seeder
 
         // ——— Notifikasi ———
         $notifications = [
-            [$adminSarpras, 'warning', '3 aset rusak di Ruang 9B', 'Persentase aset rusak di Ruang 9B melewati ambang batas 15%. Segera lakukan pengecekan.', route('rooms.show', $rooms['A203'])],
+            [$adminSarpras, 'warning', '3 aset rusak di Ruang XII-2', 'Persentase aset rusak di Ruang XII-2 melewati ambang batas 15%. Segera lakukan pengecekan.', route('rooms.show', $rooms['A203'])],
             [$adminSarpras, 'danger', 'Laporan kerusakan baru', 'Printer ruang guru dilaporkan macet oleh Maya Sari.', route('tickets.index')],
             [$superAdmin, 'info', 'Pemesanan ruangan menunggu', 'Ada 2 pengajuan pemesanan ruangan yang menunggu persetujuan.', route('bookings.index')],
             [$guru, 'success', 'Peminjaman disetujui', 'Peminjaman proyektor untuk presentasi IPS telah disetujui.', route('loans.index')],

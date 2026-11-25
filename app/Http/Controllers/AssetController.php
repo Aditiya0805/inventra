@@ -356,7 +356,7 @@ class AssetController extends Controller
 
         return view('assets.labels', [
             'assets' => $assets,
-            'schoolName' => \App\Models\Setting::get('school_name', 'SMP Negeri 1 Nusantara'),
+            'schoolName' => \App\Models\Setting::get('school_name', 'MA Muhammadiyah Bandar Lampung'),
         ]);
     }
 

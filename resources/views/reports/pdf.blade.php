@@ -198,12 +198,17 @@
     <div class="header">
         <table class="header-table">
             <tr>
-                <td style="width: 48px;">
-                    <div class="brand-mark">I</div>
+                <td style="width: 52px;">
+                    @if (file_exists(public_path('images/logo-mambalam.png')))
+                        <img src="{{ public_path('images/logo-mambalam.png') }}" style="width: 48px; height: 48px; object-fit: contain;" alt="Logo">
+                    @else
+                        <div class="brand-mark">I</div>
+                    @endif
                 </td>
                 <td>
                     <div class="school-name">{{ $schoolName }}</div>
                     <div class="school-meta">{{ $address }}</div>
+                    <div class="school-meta" style="margin-top: 2px;">NPSN: 10648361 · NSM: 131218710003 · Website: www.mambalam.sch.id</div>
                 </td>
                 <td>
                     <div class="doc-label">Inventra · Laporan</div>
@@ -289,12 +294,12 @@
         <tr>
             <td>
                 <div>Mengetahui,</div>
-                <div>Kepala Sekolah</div>
+                <div>Kepala Madrasah</div>
                 <div class="space"></div>
-                <span class="name">{{ $headmaster ?: '.................................' }}</span>
+                <span class="name">{{ $headmaster ?: 'Hadi Sururudin, S.Pd.I., M.Pd.' }}</span>
             </td>
             <td style="text-align: right;">
-                <div>Nusantara, {{ now()->format('d F Y') }}</div>
+                <div>Bandar Lampung, {{ now()->format('d F Y') }}</div>
                 <div>Admin Sarana Prasarana</div>
                 <div class="space"></div>
                 <span class="name">{{ auth()->user()?->name ?? '.................................' }}</span>
@@ -303,7 +308,7 @@
     </table>
 
     <div class="footer">
-        <span>Inventra — Sistem Monitoring Aset &amp; Fasilitas Sekolah</span>
+        <span>Inventra — Sistem Monitoring Aset &amp; Fasilitas Madrasah</span>
         <span class="footer-right">Dokumen dibuat otomatis oleh sistem</span>
     </div>
 </body>

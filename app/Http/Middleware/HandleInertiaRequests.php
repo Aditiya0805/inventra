@@ -50,10 +50,10 @@ class HandleInertiaRequests extends Middleware
                 'unread' => $user ? \App\Models\AppNotification::where('user_id', $user->id)->whereNull('read_at')->count() : 0,
             ],
             'settings' => [
-                'school_name' => \App\Models\Setting::get('school_name', 'SMP Negeri 1 Nusantara'),
-                'school_address' => \App\Models\Setting::get('school_address', 'Jl. Pendidikan No. 1, Nusantara'),
+                'school_name' => \App\Models\Setting::get('school_name', 'MA Muhammadiyah Bandar Lampung'),
+                'school_address' => \App\Models\Setting::get('school_address', 'Jl. Pulau Sangiang RT 07 LK II, Sukarame, Kota Bandar Lampung, Lampung 35131'),
                 'academic_year' => \App\Models\Setting::get('academic_year', '2026/2027'),
-                'headmaster' => \App\Models\Setting::get('headmaster', 'Dr. Sri Wahyuni, M.Pd.'),
+                'headmaster' => \App\Models\Setting::get('headmaster', 'Hadi Sururudin, S.Pd.I., M.Pd.'),
                 'alert_threshold' => (int) \App\Models\Setting::get('alert_threshold', 15),
                 'loan_reminder_days' => (int) \App\Models\Setting::get('loan_reminder_days', 2),
                 'app_name' => 'Inventra',

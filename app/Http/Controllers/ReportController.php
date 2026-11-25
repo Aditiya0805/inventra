@@ -49,9 +49,9 @@ class ReportController extends Controller
             return Pdf::loadView('reports.pdf', [
                 ...$table,
                 'filters' => $filters,
-                'schoolName' => \App\Models\Setting::get('school_name', 'SMP Negeri 1 Nusantara'),
-                'address' => \App\Models\Setting::get('school_address', ''),
-                'headmaster' => \App\Models\Setting::get('headmaster', ''),
+                'schoolName' => \App\Models\Setting::get('school_name', 'MA Muhammadiyah Bandar Lampung'),
+                'address' => \App\Models\Setting::get('school_address', 'Jl. Pulau Sangiang RT 07 LK II, Sukarame, Kota Bandar Lampung, Lampung 35131'),
+                'headmaster' => \App\Models\Setting::get('headmaster', 'Hadi Sururudin, S.Pd.I., M.Pd.'),
             ])->setPaper('a4', 'landscape')->download($filename.'.pdf');
         }
 
