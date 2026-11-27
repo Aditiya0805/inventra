@@ -26,6 +26,13 @@ class DamageTicket extends Model
         'urgency', 'status', 'technician_id', 'cost', 'repair_notes', 'verified_at', 'resolved_at',
     ];
 
+    protected $appends = ['photo_url'];
+
+    public function getPhotoUrlAttribute(): ?string
+    {
+        return $this->photo ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->photo) : null;
+    }
+
     protected function casts(): array
     {
         return [

@@ -6,7 +6,7 @@ import { buttonClass } from '../../Components/Button';
 import { Card, CardHeader } from '../../Components/Card';
 import { Checkbox, Input, Select, Textarea } from '../../Components/Form';
 import PageHeader from '../../Components/PageHeader';
-import { cn, formatCurrency, formatNumber } from '../../lib/utils';
+import { cn, compressImage, formatCurrency, formatNumber } from '../../lib/utils';
 
 export default function AssetForm({ asset, categories, rooms, statuses, selectedCategory }) {
     const isEdit = !!asset;
@@ -47,10 +47,18 @@ export default function AssetForm({ asset, categories, rooms, statuses, selected
         post(isEdit ? `/aset/${asset.id}` : '/aset', { forceFormData: true });
     };
 
-    const onPhoto = (event) => {
+    const onPhoto = async (event) => {
         const file = event.target.files?.[0] ?? null;
-        setData('photo', file);
-        if (file) setPreview(URL.createObjectURL(file));
+        if (!file) return;
+
+        try {
+            const compressed = await compressImage(file);
+            setData('photo', compressed);
+            setPreview(URL.createObjectURL(compressed));
+        } catch {
+            setData('photo', file);
+            setPreview(URL.createObjectURL(file));
+        }
     };
 
     return (

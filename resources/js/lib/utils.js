@@ -143,3 +143,58 @@ export function truncate(text, length = 80) {
     if (!text) return '';
     return text.length > length ? `${text.slice(0, length)}…` : text;
 }
+
+export async function compressImage(file, maxWidth = 1920, maxHeight = 1920, quality = 0.85) {
+    if (!file || !file.type || !file.type.startsWith('image/')) return file;
+    if (file.type === 'image/svg+xml' || file.type === 'image/gif' || file.size < 500 * 1024) {
+        return file;
+    }
+
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                let { width, height } = img;
+                if (width > maxWidth || height > maxHeight) {
+                    if (width / height > maxWidth / maxHeight) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    } else {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const outType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+                canvas.toBlob(
+                    (blob) => {
+                        if (!blob || blob.size >= file.size) {
+                            resolve(file);
+                        } else {
+                            const ext = outType === 'image/jpeg' ? '.jpg' : '.png';
+                            const newName = file.name.replace(/\.[^/.]+$/, ext);
+                            const newFile = new File([blob], newName, {
+                                type: outType,
+                                lastModified: Date.now(),
+                            });
+                            resolve(newFile);
+                        }
+                    },
+                    outType,
+                    quality
+                );
+            };
+            img.onerror = () => resolve(file);
+            img.src = e.target.result;
+        };
+        reader.onerror = () => resolve(file);
+        reader.readAsDataURL(file);
+    });
+}

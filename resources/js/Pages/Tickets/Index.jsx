@@ -9,6 +9,7 @@ import {
     Search,
     UserCheck,
     Wrench,
+    X,
 } from 'lucide-react';
 import { useState } from 'react';
 import AppLayout from '../../Components/AppLayout';
@@ -19,7 +20,7 @@ import EmptyState from '../../Components/EmptyState';
 import { Input, Select, Textarea } from '../../Components/Form';
 import Modal from '../../Components/Modal';
 import PageHeader from '../../Components/PageHeader';
-import { cn, formatCurrency, formatDate, formatNumber, timeAgo } from '../../lib/utils';
+import { cn, compressImage, formatCurrency, formatDate, formatNumber, timeAgo } from '../../lib/utils';
 
 const URGENCY_ACCENT = {
     rendah: 'border-l-slate-300',
@@ -44,6 +45,7 @@ export default function TicketsIndex({
 
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
     const [open, setOpen] = useState(params.get('create') === '1');
+    const [photoPreview, setPhotoPreview] = useState(null);
 
     const form = useForm({
         asset_id: '',
@@ -53,6 +55,25 @@ export default function TicketsIndex({
         urgency: 'sedang',
         photo: null,
     });
+
+    const handlePhotoChange = async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        try {
+            const compressed = await compressImage(file);
+            form.setData('photo', compressed);
+            setPhotoPreview(URL.createObjectURL(compressed));
+        } catch {
+            form.setData('photo', file);
+            setPhotoPreview(URL.createObjectURL(file));
+        }
+    };
+
+    const removePhoto = () => {
+        form.setData('photo', null);
+        setPhotoPreview(null);
+    };
 
     const applyFilter = (key, value) => {
         router.get('/tiket', { ...filters, [key]: value || undefined }, { preserveState: true, preserveScroll: true, replace: true });
@@ -67,6 +88,7 @@ export default function TicketsIndex({
             preserveScroll: true,
             onSuccess: () => {
                 setOpen(false);
+                setPhotoPreview(null);
                 form.reset('asset_id', 'room_id', 'title', 'description', 'photo');
             },
         });
@@ -295,16 +317,36 @@ export default function TicketsIndex({
 
                     <div>
                         <label className="mb-1.5 block text-xs font-semibold text-slate-700">Foto kerusakan</label>
-                        <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3.5 py-3 text-xs text-slate-500 transition hover:border-brand-400 hover:bg-brand-50/40">
-                            <ImagePlus className="size-4 text-brand-600" />
-                            <span className="truncate">{form.data.photo ? form.data.photo.name : 'Pilih foto (JPG/PNG/WEBP, maks. 4 MB)'}</span>
-                            <input
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp"
-                                className="sr-only"
-                                onChange={(event) => form.setData('photo', event.target.files?.[0] ?? null)}
-                            />
-                        </label>
+                        {photoPreview ? (
+                            <div className="relative overflow-hidden rounded-xl border border-slate-200">
+                                <img src={photoPreview} alt="Pratinjau kerusakan" className="max-h-48 w-full object-cover" />
+                                <button
+                                    type="button"
+                                    onClick={removePhoto}
+                                    className="absolute top-2 right-2 rounded-lg bg-slate-900/70 p-1.5 text-white transition hover:bg-slate-900"
+                                    title="Hapus foto"
+                                >
+                                    <X className="size-3.5" />
+                                </button>
+                                <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-3 py-1.5 text-[10px] text-slate-600">
+                                    <span className="truncate">{form.data.photo?.name}</span>
+                                    <span className="ml-2 shrink-0 font-mono text-[9px] text-slate-400">
+                                        {form.data.photo ? `${(form.data.photo.size / 1024).toFixed(0)} KB` : ''}
+                                    </span>
+                                </div>
+                            </div>
+                        ) : (
+                            <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3.5 py-3 text-xs text-slate-500 transition hover:border-brand-400 hover:bg-brand-50/40">
+                                <ImagePlus className="size-4 text-brand-600" />
+                                <span className="truncate">Pilih foto bukti kerusakan (JPG, PNG, WEBP)</span>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="sr-only"
+                                    onChange={handlePhotoChange}
+                                />
+                            </label>
+                        )}
                         {form.errors.photo && <p className="mt-1 text-[11px] font-medium text-rose-600">{form.errors.photo}</p>}
                     </div>
 

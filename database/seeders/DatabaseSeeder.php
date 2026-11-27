@@ -150,7 +150,6 @@ class DatabaseSeeder extends Seeder
             ['Lemari', 'furniture', 'individual', 'archive', 'orange'],
             ['Sound System', 'perangkat', 'individual', 'speaker', 'fuchsia'],
             ['Microphone', 'perangkat', 'individual', 'mic', 'purple'],
-            ['Jam Dinding', 'lainnya', 'individual', 'clock', 'stone'],
             ['Tempat Sampah', 'lainnya', 'bulk', 'trash', 'lime'],
             ['Tinta Printer', 'consumable', 'bulk', 'droplet', 'rose'],
             ['Kertas HVS', 'consumable', 'bulk', 'file', 'zinc'],
@@ -223,7 +222,6 @@ class DatabaseSeeder extends Seeder
                 'Lemari' => 'LMR',
                 'Sound System' => 'SND',
                 'Microphone' => 'MIC',
-                'Jam Dinding' => 'JAM',
                 'Kipas Angin' => 'KPS',
                 default => strtoupper(substr($category, 0, 3)),
             };
@@ -266,7 +264,6 @@ class DatabaseSeeder extends Seeder
             $makeUnit('Proyektor Kelas', 'Proyektor', $room, $roomCode === 'A101' ? 'perbaikan' : 'tersedia', ['brand' => 'Epson', 'model' => 'EB-X06', 'value' => 6200000]);
             $makeUnit('AC Split 1.5 PK', 'AC', $room, 'tersedia', ['brand' => 'Daikin', 'model' => 'FTKQ35', 'value' => 4800000]);
             $makeUnit('Lemari Kelas', 'Lemari', $room, 'tersedia', ['brand' => 'Olympic', 'value' => 1750000]);
-            $makeUnit('Jam Dinding', 'Jam Dinding', $room, 'tersedia', ['brand' => 'Luminous', 'value' => 85000]);
         }
 
         // ——— Lab Komputer ———
@@ -331,7 +328,6 @@ class DatabaseSeeder extends Seeder
         $makeUnit('AC Split 2 PK', 'AC', $rg, 'tersedia', ['brand' => 'Panasonic', 'value' => 6200000]);
         $makeUnit('Lemari Arsip Guru', 'Lemari', $rg, 'tersedia', ['brand' => 'Olympic', 'value' => 2100000]);
         $makeUnit('Lemari Arsip Guru 2', 'Lemari', $rg, 'tersedia', ['brand' => 'Olympic', 'value' => 2100000]);
-        $makeUnit('Jam Dinding', 'Jam Dinding', $rg, 'tersedia', ['brand' => 'Luminous', 'value' => 85000]);
 
         // ——— Kantor Kepala Sekolah ———
         $kepsek = $rooms['C103'];
@@ -345,7 +341,6 @@ class DatabaseSeeder extends Seeder
         // ——— Mushola & Kantin ———
         $mushola = $rooms['C104'];
         $makeBulk('Tempat Sampah', 'Tempat Sampah', $mushola, ['tersedia' => 2], ['value' => 45000]);
-        $makeUnit('Jam Dinding Mushola', 'Jam Dinding', $mushola, 'tersedia', ['brand' => 'Luminous', 'value' => 85000]);
         $makeUnit('Kipas Angin Mushola', 'Kipas Angin', $mushola, 'tersedia', ['brand' => 'Cosmos', 'value' => 380000]);
         $makeUnit('Sound System Mushola', 'Sound System', $mushola, 'tersedia', ['brand' => 'Polytron', 'value' => 2100000]);
 

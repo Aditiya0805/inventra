@@ -411,8 +411,13 @@ class AssetController extends Controller
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_consumable' => ['boolean'],
             'min_stock' => ['nullable', 'integer', 'min:0', 'max:100000'],
-            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
-        ], [], [
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
+        ], [
+            'photo.uploaded' => 'Ukuran foto terlalu besar atau gagal diunggah ke server.',
+            'photo.max' => 'Ukuran foto maksimal adalah 20 MB.',
+            'photo.mimes' => 'Format file yang didukung: JPG, JPEG, PNG, atau WEBP.',
+            'photo.image' => 'File harus berupa gambar/foto yang valid.',
+        ], [
             'category_id' => 'kategori',
             'room_id' => 'ruangan',
             'acquisition_date' => 'tanggal perolehan',

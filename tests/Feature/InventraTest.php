@@ -5,11 +5,14 @@ namespace Tests\Feature;
 use App\Models\Asset;
 use App\Models\AssetCategory;
 use App\Models\AssetStock;
+use App\Models\DamageTicket;
 use App\Models\Loan;
 use App\Models\Room;
 use App\Models\RoomBooking;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class InventraTest extends TestCase
@@ -236,5 +239,26 @@ class InventraTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('AuditLogs/Index')
                 ->where('logs.data.0.action_label', fn ($label) => is_string($label) && $label !== ''));
+    }
+
+    public function test_user_can_submit_damage_ticket_with_photo(): void
+    {
+        Storage::fake('public');
+        $guru = User::where('email', 'guru@inventra.sch.id')->firstOrFail();
+        $asset = Asset::firstOrFail();
+        $file = UploadedFile::fake()->image('bukti_rusak.jpg', 640, 480);
+
+        $this->actingAs($guru)->post('/tiket', [
+            'asset_id' => $asset->id,
+            'title' => 'Uji Tiket Foto',
+            'description' => 'Layar proyektor bergaris dan berkedip',
+            'urgency' => 'sedang',
+            'photo' => $file,
+        ])->assertRedirect();
+
+        $ticket = DamageTicket::where('title', 'Uji Tiket Foto')->firstOrFail();
+        $this->assertNotNull($ticket->photo);
+        Storage::disk('public')->assertExists($ticket->photo);
+        $this->assertNotNull($ticket->photo_url);
     }
 }

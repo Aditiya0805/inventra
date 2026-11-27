@@ -83,7 +83,12 @@ class DamageTicketController extends Controller
             'title' => ['required', 'string', 'max:150'],
             'description' => ['required', 'string', 'max:2000'],
             'urgency' => ['required', Rule::in(array_keys(DamageTicket::URGENCIES))],
-            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:20480'],
+        ], [
+            'photo.uploaded' => 'Ukuran foto terlalu besar atau gagal diunggah ke server.',
+            'photo.max' => 'Ukuran foto maksimal adalah 20 MB.',
+            'photo.mimes' => 'Format file yang didukung: JPG, JPEG, PNG, atau WEBP.',
+            'photo.image' => 'File harus berupa gambar/foto yang valid.',
         ]);
 
         if (empty($data['asset_id']) && empty($data['room_id'])) {
