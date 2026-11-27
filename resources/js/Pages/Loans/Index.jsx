@@ -1,10 +1,14 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
+    BookOpen,
+    Building2,
     Check,
     CheckCircle2,
     ClipboardList,
     Clock,
+    DoorOpen,
+    GraduationCap,
     PackageCheck,
     Plus,
     RotateCcw,
@@ -34,7 +38,14 @@ const STATUS_TONE = {
     terlambat: 'rose',
 };
 
-export default function LoansIndex({ loans, filters, availableAssets, users, stats, statuses }) {
+const CATEGORY_TONE = {
+    kelas: 'bg-blue-50 text-blue-700 border-blue-200',
+    ruangan: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    gedung: 'bg-purple-50 text-purple-700 border-purple-200',
+    aset: 'bg-slate-50 text-slate-700 border-slate-200',
+};
+
+export default function LoansIndex({ loans, filters, availableFacilities = [], users = [], stats, statuses }) {
     const { auth } = usePage().props;
     const user = auth?.user;
     const isAdmin = user?.is_admin;
@@ -49,9 +60,12 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
     const iso = (date) => date.toISOString().slice(0, 10);
     const dueDefault = new Date(today.getTime() + 3 * 86400000);
 
+    const classes = availableFacilities.filter((f) => f.category === 'kelas');
+    const specialRooms = availableFacilities.filter((f) => f.category === 'ruangan');
+    const buildings = availableFacilities.filter((f) => f.category === 'gedung');
+
     const form = useForm({
-        asset_id: availableAssets[0]?.id ?? '',
-        quantity: 1,
+        facility_id: availableFacilities[0]?.id ?? '',
         borrower_id: '',
         purpose: '',
         start_date: iso(today),
@@ -59,7 +73,9 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
         notes: '',
     });
 
-    const selectedAsset = availableAssets.find((asset) => String(asset.id) === String(form.data.asset_id));
+    const selectedFacility = availableFacilities.find(
+        (f) => String(f.id) === String(form.data.facility_id)
+    );
 
     const applyFilter = (key, value) => {
         router.get(
@@ -75,7 +91,7 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
         form.clearErrors();
         form.setData((data) => ({
             ...data,
-            asset_id: data.asset_id || availableAssets[0]?.id || '',
+            facility_id: data.facility_id || availableFacilities[0]?.id || '',
             borrower_id: '',
         }));
         setOpen(true);
@@ -122,21 +138,32 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
         });
     };
 
+    const getFacilityIcon = (type) => {
+        switch (type) {
+            case 'gedung':
+                return Building2;
+            case 'kelas':
+                return GraduationCap;
+            default:
+                return DoorOpen;
+        }
+    };
+
     return (
-        <AppLayout title="Peminjaman" subtitle={`${loans.total} catatan peminjaman`}>
-            <Head title="Peminjaman" />
+        <AppLayout title="Peminjaman Fasilitas" subtitle={`${loans.total} catatan peminjaman`}>
+            <Head title="Peminjaman Fasilitas" />
 
             <PageHeader
-                title="Peminjaman Aset"
-                description="Ajukan peminjaman, setujui permintaan, dan pantau pengembalian aset sekolah."
+                title="Peminjaman Fasilitas Sekolah"
+                description="Layanan peminjaman resmi untuk Ruang Kelas, Gedung, dan Ruangan Khusus di MA Muhammadiyah Bandar Lampung."
                 actions={
                     <>
                         <button type="button" onClick={resetFilters} className={buttonClass('secondary', 'md')}>
                             <RotateCcw className="size-4" /> Reset
                         </button>
                         {canRequest && (
-                            <Button onClick={openCreate} disabled={availableAssets.length === 0}>
-                                <Plus className="size-4" /> Ajukan Peminjaman
+                            <Button onClick={openCreate} disabled={availableFacilities.length === 0}>
+                                <Plus className="size-4" /> Pinjam Kelas / Gedung / Ruangan
                             </Button>
                         )}
                     </>
@@ -145,8 +172,8 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
 
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <StatCard label="Menunggu" value={formatNumber(stats.pending)} hint="Perlu persetujuan admin" icon={Clock} tone="amber" />
-                <StatCard label="Aktif Dipinjam" value={formatNumber(stats.active)} hint="Belum dikembalikan" icon={PackageCheck} tone="indigo" />
-                <StatCard label="Terlambat" value={formatNumber(stats.overdue)} hint="Melewati jatuh tempo" icon={AlertTriangle} tone="rose" />
+                <StatCard label="Aktif Dipakai" value={formatNumber(stats.active)} hint="Sedang digunakan" icon={PackageCheck} tone="indigo" />
+                <StatCard label="Terlambat" value={formatNumber(stats.overdue)} hint="Melewati batas waktu" icon={AlertTriangle} tone="rose" />
                 <StatCard label="Selesai" value={formatNumber(stats.returned)} hint="Sudah dikembalikan" icon={CheckCircle2} tone="emerald" />
             </div>
 
@@ -156,7 +183,7 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
                         <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-slate-400" />
                         <input
                             defaultValue={filters.q}
-                            placeholder="Cari kode, aset, atau peminjam…"
+                            placeholder="Cari kode, kelas, gedung, ruangan, atau peminjam…"
                             onKeyDown={(event) => {
                                 if (event.key === 'Enter') applyFilter('q', event.currentTarget.value);
                             }}
@@ -198,10 +225,10 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
                 {loans.data.length === 0 ? (
                     <EmptyState
                         icon={ClipboardList}
-                        title="Belum ada peminjaman"
-                        description="Pengajuan peminjaman aset akan muncul di sini."
-                        action={canRequest && availableAssets.length > 0 && (
-                            <Button size="sm" onClick={openCreate}><Plus className="size-3.5" /> Ajukan Peminjaman</Button>
+                        title="Belum ada peminjaman fasilitas"
+                        description="Pengajuan peminjaman ruang kelas, gedung, atau ruangan akan muncul di sini."
+                        action={canRequest && availableFacilities.length > 0 && (
+                            <Button size="sm" onClick={openCreate}><Plus className="size-3.5" /> Pinjam Fasilitas</Button>
                         )}
                     />
                 ) : (
@@ -209,10 +236,10 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
                         <table className="w-full min-w-[980px] text-left text-xs">
                             <thead className="border-b border-slate-100 bg-slate-50 text-[10px] tracking-wide text-slate-500 uppercase">
                                 <tr>
-                                    <th className="px-5 py-3 font-semibold">Kode &amp; Aset</th>
+                                    <th className="px-5 py-3 font-semibold">Kode &amp; Fasilitas</th>
+                                    <th className="px-3 py-3 font-semibold">Kategori &amp; Lokasi</th>
                                     <th className="px-3 py-3 font-semibold">Peminjam</th>
-                                    <th className="px-3 py-3 font-semibold">Periode</th>
-                                    <th className="px-3 py-3 text-center font-semibold">Jumlah</th>
+                                    <th className="px-3 py-3 font-semibold">Periode Peminjaman</th>
                                     <th className="px-3 py-3 font-semibold">Status</th>
                                     <th className="px-5 py-3 text-right font-semibold">Aksi</th>
                                 </tr>
@@ -220,33 +247,44 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
                             <tbody className="divide-y divide-slate-50">
                                 {loans.data.map((loan) => {
                                     const badgeStatus = loan.is_overdue ? 'terlambat' : loan.status;
+                                    const FacilityIcon = getFacilityIcon(loan.facility_type);
+                                    const categoryClass = CATEGORY_TONE[loan.facility_type] ?? CATEGORY_TONE.ruangan;
+
                                     return (
                                         <tr key={loan.id} className="transition hover:bg-slate-50/70">
                                             <td className="px-5 py-3">
                                                 <p className="font-mono text-[10px] text-slate-400">{loan.code}</p>
-                                                <p className="mt-0.5 max-w-56 truncate font-semibold text-slate-800">
-                                                    {loan.asset?.name ?? 'Aset dihapus'}
+                                                <div className="mt-0.5 flex items-center gap-1.5">
+                                                    <FacilityIcon className="size-4 shrink-0 text-slate-500" />
+                                                    <p className="font-semibold text-slate-800">
+                                                        {loan.facility_name}
+                                                    </p>
+                                                </div>
+                                                {loan.purpose && (
+                                                    <p className="mt-1 max-w-72 truncate text-[10px] text-slate-500">
+                                                        {loan.purpose}
+                                                    </p>
+                                                )}
+                                            </td>
+                                            <td className="px-3 py-3">
+                                                <span className={cn('inline-block rounded-md border px-2 py-0.5 text-[10px] font-semibold', categoryClass)}>
+                                                    {loan.facility_type_label}
+                                                </span>
+                                                <p className="mt-1 text-[10px] text-slate-500">
+                                                    {loan.facility_location}
                                                 </p>
-                                                <p className="text-[10px] text-slate-400">
-                                                    {loan.asset?.code} · {loan.asset?.room?.name ?? 'Tanpa ruangan'}
-                                                </p>
-                                                {loan.purpose && <p className="mt-1 max-w-64 truncate text-[10px] text-slate-500">{loan.purpose}</p>}
                                             </td>
                                             <td className="px-3 py-3">
                                                 <p className="font-medium text-slate-700">{loan.borrower?.name ?? '—'}</p>
-                                                {loan.approver && <p className="text-[10px] text-slate-400">Disetujui {loan.approver.name}</p>}
+                                                {loan.approver && <p className="text-[10px] text-slate-400">Disetujui: {loan.approver.name}</p>}
                                             </td>
                                             <td className="px-3 py-3">
-                                                <p className="text-slate-600">{formatDate(loan.start_date)}</p>
+                                                <p className="font-medium text-slate-700">{formatDate(loan.start_date)}</p>
                                                 <p className={cn('text-[10px]', loan.is_overdue ? 'font-semibold text-rose-600' : 'text-slate-400')}>
                                                     s.d. {formatDate(loan.due_date)}
                                                     {loan.is_overdue && ' · terlambat'}
                                                 </p>
-                                                {loan.returned_at && <p className="text-[10px] text-emerald-600">Kembali {formatDate(loan.returned_at)}</p>}
-                                            </td>
-                                            <td className="tabular px-3 py-3 text-center font-semibold text-slate-700">
-                                                {formatNumber(loan.quantity)}
-                                                <span className="ml-0.5 text-[9px] font-normal text-slate-400">unit</span>
+                                                {loan.returned_at && <p className="text-[10px] text-emerald-600">Selesai: {formatDate(loan.returned_at)}</p>}
                                             </td>
                                             <td className="px-3 py-3">
                                                 <Badge status={badgeStatus} color={STATUS_TONE[badgeStatus]} dot>
@@ -260,8 +298,8 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
                                                             <button
                                                                 type="button"
                                                                 onClick={() => act(loan, 'approve', {
-                                                                    title: 'Setujui peminjaman?',
-                                                                    description: `${loan.asset?.name} akan ditandai dipinjam oleh ${loan.borrower?.name}.`,
+                                                                    title: 'Setujui peminjaman fasilitas?',
+                                                                    description: `${loan.facility_name} akan ditandai dipinjam/dipakai oleh ${loan.borrower?.name}.`,
                                                                     confirmLabel: 'Setujui',
                                                                     danger: false,
                                                                 })}
@@ -273,8 +311,9 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
                                                                 type="button"
                                                                 onClick={() => act(loan, 'reject', {
                                                                     title: 'Tolak peminjaman?',
-                                                                    description: `Pengajuan ${loan.code} akan ditolak.`,
+                                                                    description: `Pengajuan peminjaman ${loan.code} akan ditolak.`,
                                                                     confirmLabel: 'Tolak',
+                                                                    danger: true,
                                                                 })}
                                                                 className={buttonClass('secondary', 'xs')}
                                                             >
@@ -286,14 +325,14 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
                                                         <button
                                                             type="button"
                                                             onClick={() => act(loan, 'return', {
-                                                                title: 'Tandai dikembalikan?',
-                                                                description: `${formatNumber(loan.quantity)} unit ${loan.asset?.name} akan kembali tersedia.`,
-                                                                confirmLabel: 'Tandai kembali',
+                                                                title: 'Tandai selesai / dikembalikan?',
+                                                                description: `${loan.facility_name} akan diselesaikan dan siap digunakan kembali.`,
+                                                                confirmLabel: 'Tandai selesai',
                                                                 danger: false,
                                                             })}
                                                             className={buttonClass('secondary', 'xs')}
                                                         >
-                                                            <Undo2 className="size-3" /> Kembali
+                                                            <Undo2 className="size-3" /> Selesai
                                                         </button>
                                                     )}
                                                     {isAdmin && ['menunggu', 'ditolak'].includes(loan.status) && (
@@ -307,7 +346,7 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
                                                         </button>
                                                     )}
                                                     {!isAdmin && loan.status === 'menunggu' && loan.borrower_id === user?.id && (
-                                                        <span className="text-[10px] text-slate-400">Menunggu admin</span>
+                                                        <span className="text-[10px] text-slate-400">Menunggu verifikasi admin</span>
                                                     )}
                                                 </div>
                                             </td>
@@ -318,6 +357,7 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
                         </table>
                     </div>
                 )}
+
                 <div className="border-t border-slate-100 px-5 py-3">
                     <Pagination paginator={loans} />
                 </div>
@@ -326,58 +366,90 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
             <Modal
                 open={open}
                 onClose={() => setOpen(false)}
-                title="Ajukan peminjaman aset"
-                description="Pilih aset yang tersedia dan tentukan periode peminjaman."
-                icon={PackageCheck}
+                title="Ajukan Peminjaman Fasilitas"
+                description="Pilih kelas, gedung, atau ruangan madrasah yang ingin dipinjam."
+                icon={Building2}
                 footer={
                     <>
                         <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Batal</Button>
-                        <Button size="sm" onClick={submit} loading={form.processing}>Kirim pengajuan</Button>
+                        <Button size="sm" onClick={submit} loading={form.processing}>Kirim Pengajuan</Button>
                     </>
                 }
             >
-                <form onSubmit={submit} className="space-y-3">
-                    <Select
-                        label="Aset"
-                        required
-                        value={form.data.asset_id}
-                        onChange={(event) => {
-                            form.setData('asset_id', event.target.value);
-                            form.setData('quantity', 1);
-                        }}
-                        error={form.errors.asset_id}
-                        placeholder="Pilih aset"
-                    >
-                        {availableAssets.map((asset) => (
-                            <option key={asset.id} value={asset.id}>
-                                {asset.name} ({asset.code}) — {asset.available} tersedia
-                            </option>
-                        ))}
-                    </Select>
+                <form onSubmit={submit} className="space-y-3.5">
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-700">
+                            Fasilitas yang Dipinjam <span className="text-rose-500">*</span>
+                        </label>
+                        <select
+                            value={form.data.facility_id}
+                            onChange={(event) => form.setData('facility_id', event.target.value)}
+                            className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none"
+                            required
+                        >
+                            <option value="" disabled>Pilih Kelas, Gedung, atau Ruangan...</option>
 
-                    {selectedAsset && (
-                        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] text-slate-600">
-                            <p className="font-semibold text-slate-800">{selectedAsset.name}</p>
-                            <p className="mt-0.5">
-                                {selectedAsset.category ?? 'Tanpa kategori'} · {selectedAsset.room ?? 'Tanpa ruangan'} ·{' '}
-                                <span className="font-semibold text-emerald-700">{formatNumber(selectedAsset.available)} tersedia</span>
-                            </p>
+                            {classes.length > 0 && (
+                                <optgroup label="── RUANG KELAS ──">
+                                    {classes.map((f) => (
+                                        <option key={f.id} value={f.id}>
+                                            {f.name} ({f.code}) — {f.capacity}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            )}
+
+                            {specialRooms.length > 0 && (
+                                <optgroup label="── RUANGAN & LABORATORIUM ──">
+                                    {specialRooms.map((f) => (
+                                        <option key={f.id} value={f.id}>
+                                            {f.name} ({f.code}) — {f.location}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            )}
+
+                            {buildings.length > 0 && (
+                                <optgroup label="── GEDUNG MADRASAH ──">
+                                    {buildings.map((f) => (
+                                        <option key={f.id} value={f.id}>
+                                            {f.name} ({f.code}) — {f.capacity}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            )}
+                        </select>
+                        {form.errors.facility_id && (
+                            <p className="mt-1 text-[11px] text-rose-500">{form.errors.facility_id}</p>
+                        )}
+                    </div>
+
+                    {selectedFacility && (
+                        <div className="flex items-start gap-3 rounded-xl border border-brand-100 bg-brand-50/50 p-3 text-xs text-slate-700">
+                            <div className="rounded-lg bg-brand-600 p-2 text-white">
+                                {selectedFacility.category === 'gedung' ? (
+                                    <Building2 className="size-4" />
+                                ) : selectedFacility.category === 'kelas' ? (
+                                    <GraduationCap className="size-4" />
+                                ) : (
+                                    <DoorOpen className="size-4" />
+                                )}
+                            </div>
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                    <p className="font-semibold text-slate-900">{selectedFacility.name}</p>
+                                    <span className={cn('rounded px-1.5 py-0.5 text-[9px] font-semibold border', CATEGORY_TONE[selectedFacility.category])}>
+                                        {selectedFacility.category_label}
+                                    </span>
+                                </div>
+                                <p className="mt-0.5 text-[11px] text-slate-600">
+                                    {selectedFacility.location} · {selectedFacility.capacity}
+                                </p>
+                            </div>
                         </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <Input
-                            label="Jumlah"
-                            type="number"
-                            min="1"
-                            max={selectedAsset?.available ?? 1}
-                            required
-                            value={form.data.quantity}
-                            onChange={(event) => form.setData('quantity', event.target.value)}
-                            error={form.errors.quantity}
-                            hint={selectedAsset?.is_bulk ? `Maks. ${selectedAsset.available} unit` : 'Aset individual: 1 unit'}
-                            disabled={!selectedAsset?.is_bulk}
-                        />
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         {isAdmin ? (
                             <Select
                                 label="Peminjam"
@@ -398,16 +470,16 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
                                 <p className="text-xs font-semibold text-slate-800">{user?.name}</p>
                             </div>
                         )}
-                    </div>
 
-                    <Input
-                        label="Tujuan peminjaman"
-                        required
-                        value={form.data.purpose}
-                        onChange={(event) => form.setData('purpose', event.target.value)}
-                        error={form.errors.purpose}
-                        placeholder="Contoh: Kegiatan class meeting"
-                    />
+                        <Input
+                            label="Tujuan peminjaman"
+                            required
+                            value={form.data.purpose}
+                            onChange={(event) => form.setData('purpose', event.target.value)}
+                            error={form.errors.purpose}
+                            placeholder="Contoh: Kegiatan Ujian / Rapat / Pentas Seni"
+                        />
+                    </div>
 
                     <div className="grid grid-cols-2 gap-3">
                         <Input
@@ -419,7 +491,7 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
                             error={form.errors.start_date}
                         />
                         <Input
-                            label="Jatuh tempo"
+                            label="Jatuh tempo / Selesai"
                             type="date"
                             required
                             value={form.data.due_date}
@@ -430,18 +502,18 @@ export default function LoansIndex({ loans, filters, availableAssets, users, sta
                     </div>
 
                     <Textarea
-                        label="Catatan"
+                        label="Catatan tambahan"
                         rows={2}
                         value={form.data.notes}
                         onChange={(event) => form.setData('notes', event.target.value)}
                         error={form.errors.notes}
-                        placeholder="Informasi tambahan (opsional)"
+                        placeholder="Contoh: Kebutuhan sound system, proyektor, atau tata kursi khusus (opsional)"
                     />
 
                     <p className="rounded-lg bg-slate-50 px-3 py-2 text-[10px] text-slate-500">
                         {isAdmin
-                            ? 'Sebagai admin, peminjaman langsung dicatat dan aset ditandai dipinjam.'
-                            : 'Pengajuan akan menunggu persetujuan admin sarana prasarana.'}
+                            ? 'Sebagai admin, peminjaman langsung disetujui dan jadwal fasilitas akan dikunci.'
+                            : 'Pengajuan akan dikirim ke admin sarana prasarana MA Muhammadiyah untuk diverifikasi.'}
                     </p>
                 </form>
             </Modal>

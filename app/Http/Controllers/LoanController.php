@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asset;
+use App\Models\Building;
 use App\Models\Loan;
+use App\Models\Room;
 use App\Models\User;
 use App\Support\AuditLogger;
 use App\Support\Notifier;
@@ -24,10 +26,21 @@ class LoanController extends Controller
         ];
 
         $loans = Loan::query()
-            ->with(['asset:id,code,name,category_id,room_id', 'asset.category:id,name', 'asset.room:id,name', 'borrower:id,name', 'approver:id,name'])
+            ->with([
+                'room:id,name,code,type,building_id,floor',
+                'room.building:id,name,code',
+                'building:id,name,code',
+                'asset:id,code,name,category_id,room_id',
+                'asset.category:id,name',
+                'asset.room:id,name',
+                'borrower:id,name,role',
+                'approver:id,name',
+            ])
             ->when($filters['q'], fn ($q, $v) => $q->where(fn ($inner) => $inner
                 ->where('code', 'like', "%{$v}%")
                 ->orWhere('purpose', 'like', "%{$v}%")
+                ->orWhereHas('room', fn ($r) => $r->where('name', 'like', "%{$v}%")->orWhere('code', 'like', "%{$v}%"))
+                ->orWhereHas('building', fn ($b) => $b->where('name', 'like', "%{$v}%")->orWhere('code', 'like', "%{$v}%"))
                 ->orWhereHas('asset', fn ($a) => $a->where('name', 'like', "%{$v}%")->orWhere('code', 'like', "%{$v}%"))
                 ->orWhereHas('borrower', fn ($u) => $u->where('name', 'like', "%{$v}%"))))
             ->when($filters['status'] === 'terlambat', fn ($q) => $q->whereIn('status', ['disetujui', 'dipinjam'])->whereDate('due_date', '<', today()))
@@ -40,31 +53,62 @@ class LoanController extends Controller
                 ...$loan->toArray(),
                 'status_label' => $loan->statusLabel(),
                 'is_overdue' => $loan->isOverdue(),
+                'facility_name' => $loan->facilityName(),
+                'facility_code' => $loan->facilityCode(),
+                'facility_type' => $loan->facilityType(),
+                'facility_type_label' => $loan->facilityTypeLabel(),
+                'facility_location' => $loan->facilityLocation(),
             ]);
 
-        $availableAssets = Asset::with(['category:id,name,tracking_type', 'room:id,name', 'stock'])
-            ->withCount(['loans as active_loans_count' => fn ($q) => $q->whereIn('status', ['menunggu', 'disetujui', 'dipinjam'])])
-            ->where(fn ($q) => $q->where('status', 'tersedia')->orWhereHas('category', fn ($c) => $c->where('tracking_type', 'bulk')))
+        $classes = Room::with('building')
+            ->where('type', 'kelas')
             ->orderBy('name')
             ->get()
-            ->filter(fn (Asset $asset) => $asset->isBulk()
-                ? ($asset->stock?->qty_available ?? 0) > 0
-                : $asset->status === 'tersedia' && $asset->active_loans_count === 0)
-            ->map(fn (Asset $asset) => [
-                'id' => $asset->id,
-                'code' => $asset->code,
-                'name' => $asset->name,
-                'category' => $asset->category?->name,
-                'is_bulk' => $asset->isBulk(),
-                'available' => $asset->isBulk() ? ($asset->stock?->qty_available ?? 0) : 1,
-                'room' => $asset->room?->name,
-            ])
-            ->values();
+            ->map(fn (Room $room) => [
+                'id' => "room_{$room->id}",
+                'raw_id' => $room->id,
+                'category' => 'kelas',
+                'category_label' => 'Ruang Kelas',
+                'name' => $room->name,
+                'code' => $room->code,
+                'location' => ($room->building?->name ?? 'Gedung Sekolah') . ($room->floor ? " · Lt. {$room->floor}" : ''),
+                'capacity' => $room->capacity ? "Kapasitas {$room->capacity} siswa" : '1 Ruang Kelas',
+            ]);
+
+        $rooms = Room::with('building')
+            ->where('type', '!=', 'kelas')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Room $room) => [
+                'id' => "room_{$room->id}",
+                'raw_id' => $room->id,
+                'category' => 'ruangan',
+                'category_label' => 'Ruangan & Lab',
+                'name' => $room->name,
+                'code' => $room->code,
+                'location' => ($room->building?->name ?? 'Gedung Sekolah') . ($room->floor ? " · Lt. {$room->floor}" : ''),
+                'capacity' => $room->capacity ? "Kapasitas {$room->capacity} orang" : '1 Ruangan',
+            ]);
+
+        $buildings = Building::orderBy('name')
+            ->get()
+            ->map(fn (Building $building) => [
+                'id' => "building_{$building->id}",
+                'raw_id' => $building->id,
+                'category' => 'gedung',
+                'category_label' => 'Gedung',
+                'name' => $building->name,
+                'code' => $building->code,
+                'location' => "Kompleks MA Muhammadiyah ({$building->code})",
+                'capacity' => $building->total_floors ? "{$building->total_floors} Lantai" : '1 Unit Gedung',
+            ]);
+
+        $availableFacilities = $classes->concat($rooms)->concat($buildings)->values();
 
         return Inertia::render('Loans/Index', [
             'loans' => $loans,
             'filters' => $filters,
-            'availableAssets' => $availableAssets,
+            'availableFacilities' => $availableFacilities,
             'users' => User::where('is_active', true)->orderBy('name')->get(['id', 'name', 'role']),
             'stats' => [
                 'pending' => Loan::where('status', 'menunggu')->count(),
@@ -79,8 +123,9 @@ class LoanController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'asset_id' => ['required', 'exists:assets,id'],
-            'quantity' => ['required', 'integer', 'min:1', 'max:1000'],
+            'facility_id' => ['nullable', 'string'],
+            'asset_id' => ['nullable', 'exists:assets,id'],
+            'quantity' => ['nullable', 'integer', 'min:1', 'max:1000'],
             'borrower_id' => ['nullable', 'exists:users,id'],
             'purpose' => ['required', 'string', 'max:255'],
             'start_date' => ['required', 'date'],
@@ -88,16 +133,57 @@ class LoanController extends Controller
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $asset = Asset::with('stock')->findOrFail($data['asset_id']);
-        $this->assertAvailable($asset, (int) $data['quantity']);
+        $roomId = null;
+        $buildingId = null;
+        $assetId = null;
+        $borrowableType = 'ruangan';
+        $facilityName = '';
+        $quantity = (int) ($data['quantity'] ?? 1);
+
+        if (! empty($data['facility_id'])) {
+            $parts = explode('_', (string) $data['facility_id']);
+            $type = $parts[0] ?? '';
+            $id = isset($parts[1]) ? (int) $parts[1] : 0;
+
+            if ($type === 'building') {
+                $building = Building::findOrFail($id);
+                $this->assertFacilityAvailable('gedung', $building->id, $data['start_date'], $data['due_date']);
+                $buildingId = $building->id;
+                $borrowableType = 'gedung';
+                $facilityName = $building->name;
+            } elseif ($type === 'room') {
+                $room = Room::with('building')->findOrFail($id);
+                $borrowableType = $room->type === 'kelas' ? 'kelas' : 'ruangan';
+                $this->assertFacilityAvailable($borrowableType, $room->id, $data['start_date'], $data['due_date']);
+                $roomId = $room->id;
+                $facilityName = $room->name;
+            } else {
+                throw ValidationException::withMessages([
+                    'facility_id' => 'Pilihan fasilitas tidak valid.',
+                ]);
+            }
+        } elseif (! empty($data['asset_id'])) {
+            $asset = Asset::with('stock')->findOrFail($data['asset_id']);
+            $this->assertAvailable($asset, $quantity);
+            $assetId = $asset->id;
+            $facilityName = $asset->name;
+            $borrowableType = 'ruangan';
+        } else {
+            throw ValidationException::withMessages([
+                'facility_id' => 'Harap pilih kelas, gedung, atau ruangan yang ingin dipinjam.',
+            ]);
+        }
 
         $isAdmin = $request->user()->isAdmin();
         $borrowerId = $isAdmin && ! empty($data['borrower_id']) ? (int) $data['borrower_id'] : $request->user()->id;
 
         $loan = Loan::create([
             'code' => Loan::generateCode(),
-            'asset_id' => $asset->id,
-            'quantity' => $data['quantity'],
+            'room_id' => $roomId,
+            'building_id' => $buildingId,
+            'asset_id' => $assetId,
+            'borrowable_type' => $borrowableType,
+            'quantity' => $quantity,
             'borrower_id' => $borrowerId,
             'purpose' => $data['purpose'],
             'start_date' => $data['start_date'],
@@ -108,25 +194,34 @@ class LoanController extends Controller
             'notes' => $data['notes'] ?? null,
         ]);
 
-        if ($isAdmin) {
-            $this->applyLoan($asset, (int) $data['quantity']);
+        if ($isAdmin && $assetId) {
+            $asset = Asset::with('stock')->find($assetId);
+            if ($asset) {
+                $this->applyLoan($asset, $quantity);
+            }
         }
 
-        AuditLogger::log('created', 'peminjaman', $loan->id, "Membuat peminjaman {$loan->code} untuk {$asset->name}");
+        AuditLogger::log('created', 'peminjaman', $loan->id, "Membuat peminjaman {$loan->code} untuk {$facilityName}");
 
         if (! $isAdmin) {
             Notifier::send(
                 Notifier::admins(),
-                'Pengajuan peminjaman baru',
-                "{$request->user()->name} mengajukan peminjaman {$asset->name} ({$asset->code}).",
+                'Pengajuan peminjaman fasilitas baru',
+                "{$request->user()->name} mengajukan peminjaman {$facilityName} ({$loan->code}).",
                 route('loans.index'),
                 'info',
             );
         } else {
-            Notifier::send($loan->borrower, 'Peminjaman disetujui', "Peminjaman {$asset->name} telah dicatat. Harap kembalikan sebelum {$loan->due_date->format('d/m/Y')}.", route('loans.index'), 'success');
+            Notifier::send(
+                $loan->borrower,
+                'Peminjaman disetujui',
+                "Peminjaman {$facilityName} telah dicatat. Harap selesaikan pemakaian sebelum {$loan->due_date->format('d/m/Y')}.",
+                route('loans.index'),
+                'success'
+            );
         }
 
-        return back()->with('success', $isAdmin ? 'Peminjaman berhasil dicatat.' : 'Pengajuan peminjaman menunggu persetujuan admin.');
+        return back()->with('success', $isAdmin ? 'Peminjaman fasilitas berhasil dicatat.' : 'Pengajuan peminjaman menunggu persetujuan admin.');
     }
 
     public function approve(Request $request, Loan $loan): RedirectResponse
@@ -135,21 +230,31 @@ class LoanController extends Controller
             return back()->with('error', 'Peminjaman ini sudah diproses.');
         }
 
-        $asset = Asset::with('stock')->findOrFail($loan->asset_id);
-        $this->assertAvailable($asset, $loan->quantity, $loan->id);
+        if ($loan->asset_id) {
+            $asset = Asset::with('stock')->findOrFail($loan->asset_id);
+            $this->assertAvailable($asset, $loan->quantity, $loan->id);
+            $this->applyLoan($asset, $loan->quantity);
+        }
 
         $loan->update([
             'status' => 'dipinjam',
             'approved_by' => $request->user()->id,
             'approved_at' => now(),
         ]);
-        $this->applyLoan($asset, $loan->quantity);
+
+        $facilityName = $loan->facilityName();
 
         AuditLogger::log('status', 'peminjaman', $loan->id, "Menyetujui peminjaman {$loan->code}");
 
-        Notifier::send($loan->borrower, 'Peminjaman disetujui', "Peminjaman {$asset->name} disetujui. Harap kembalikan sebelum {$loan->due_date->format('d/m/Y')}.", route('loans.index'), 'success');
+        Notifier::send(
+            $loan->borrower,
+            'Peminjaman disetujui',
+            "Peminjaman {$facilityName} disetujui. Harap gunakan sesuai ketentuan sebelum {$loan->due_date->format('d/m/Y')}.",
+            route('loans.index'),
+            'success'
+        );
 
-        return back()->with('success', 'Peminjaman disetujui dan aset ditandai dipinjam.');
+        return back()->with('success', "Peminjaman disetujui dan {$facilityName} ditandai aktif dipinjam.");
     }
 
     public function reject(Request $request, Loan $loan): RedirectResponse
@@ -159,9 +264,17 @@ class LoanController extends Controller
         }
 
         $loan->update(['status' => 'ditolak', 'approved_by' => $request->user()->id]);
+        $facilityName = $loan->facilityName();
+
         AuditLogger::log('status', 'peminjaman', $loan->id, "Menolak peminjaman {$loan->code}");
 
-        Notifier::send($loan->borrower, 'Peminjaman ditolak', "Pengajuan peminjaman {$loan->asset?->name} ditolak.", route('loans.index'), 'warning');
+        Notifier::send(
+            $loan->borrower,
+            'Peminjaman ditolak',
+            "Pengajuan peminjaman {$facilityName} ditolak.",
+            route('loans.index'),
+            'warning'
+        );
 
         return back()->with('success', 'Peminjaman ditolak.');
     }
@@ -172,13 +285,19 @@ class LoanController extends Controller
             return back()->with('error', 'Peminjaman ini tidak dalam status aktif.');
         }
 
-        $asset = Asset::with('stock')->findOrFail($loan->asset_id);
+        if ($loan->asset_id) {
+            $asset = Asset::with('stock')->find($loan->asset_id);
+            if ($asset) {
+                $this->restoreLoan($asset, $loan->quantity);
+            }
+        }
+
         $loan->update(['status' => 'dikembalikan', 'returned_at' => now()]);
-        $this->restoreLoan($asset, $loan->quantity);
+        $facilityName = $loan->facilityName();
 
-        AuditLogger::log('status', 'peminjaman', $loan->id, "Menandai peminjaman {$loan->code} dikembalikan");
+        AuditLogger::log('status', 'peminjaman', $loan->id, "Menandai peminjaman {$loan->code} dikembalikan/selesai");
 
-        return back()->with('success', 'Peminjaman selesai dan aset kembali tersedia.');
+        return back()->with('success', "Peminjaman {$facilityName} telah diselesaikan dan kembali tersedia.");
     }
 
     public function destroy(Loan $loan): RedirectResponse
@@ -192,6 +311,29 @@ class LoanController extends Controller
         AuditLogger::log('deleted', 'peminjaman', $loan->id, "Menghapus pengajuan peminjaman {$code}");
 
         return back()->with('success', 'Pengajuan peminjaman dihapus.');
+    }
+
+    private function assertFacilityAvailable(string $type, int $id, string $startDate, string $dueDate, ?int $ignoreLoanId = null): void
+    {
+        $query = Loan::whereIn('status', ['menunggu', 'disetujui', 'dipinjam'])
+            ->when($ignoreLoanId, fn ($q) => $q->whereKeyNot($ignoreLoanId))
+            ->where(function ($q) use ($startDate, $dueDate) {
+                $q->whereBetween('start_date', [$startDate, $dueDate])
+                    ->orWhereBetween('due_date', [$startDate, $dueDate])
+                    ->orWhere(fn ($sub) => $sub->where('start_date', '<=', $startDate)->where('due_date', '>=', $dueDate));
+            });
+
+        if ($type === 'gedung') {
+            $query->where('building_id', $id);
+        } else {
+            $query->where('room_id', $id);
+        }
+
+        if ($query->exists()) {
+            throw ValidationException::withMessages([
+                'facility_id' => 'Fasilitas ini sudah memiliki jadwal peminjaman aktif/menunggu pada periode tersebut.',
+            ]);
+        }
     }
 
     private function assertAvailable(Asset $asset, int $quantity, ?int $ignoreLoanId = null): void

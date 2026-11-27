@@ -195,6 +195,37 @@ class InventraTest extends TestCase
         $this->assertSame('dipinjam', $loan->fresh()->status);
     }
 
+    public function test_facility_loan_can_be_requested_and_approved(): void
+    {
+        $guru = User::where('email', 'guru@inventra.sch.id')->firstOrFail();
+        $admin = User::where('email', 'admin@inventra.sch.id')->firstOrFail();
+        $room = Room::where('type', 'kelas')->firstOrFail();
+
+        $this->actingAs($guru)->post('/peminjaman', [
+            'facility_id' => "room_{$room->id}",
+            'purpose' => 'Uji peminjaman ruang kelas',
+            'start_date' => now()->addDays(5)->toDateString(),
+            'due_date' => now()->addDays(7)->toDateString(),
+        ])->assertRedirect();
+
+        $loan = Loan::where('purpose', 'Uji peminjaman ruang kelas')->firstOrFail();
+        $this->assertSame('menunggu', $loan->status);
+        $this->assertSame($room->id, $loan->room_id);
+        $this->assertSame('kelas', $loan->borrowable_type);
+
+        $this->actingAs($admin)
+            ->post("/peminjaman/{$loan->id}/approve")
+            ->assertRedirect();
+
+        $this->assertSame('dipinjam', $loan->fresh()->status);
+
+        $this->actingAs($admin)
+            ->post("/peminjaman/{$loan->id}/return")
+            ->assertRedirect();
+
+        $this->assertSame('dikembalikan', $loan->fresh()->status);
+    }
+
     public function test_audit_log_records_actions_with_labels(): void
     {
         $admin = User::where('email', 'admin@inventra.sch.id')->firstOrFail();

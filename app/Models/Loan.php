@@ -15,9 +15,28 @@ class Loan extends Model
         'dikembalikan' => 'Dikembalikan',
     ];
 
+    public const BORROWABLE_TYPES = [
+        'kelas' => 'Ruang Kelas',
+        'ruangan' => 'Ruangan / Lab',
+        'gedung' => 'Gedung',
+    ];
+
     protected $fillable = [
-        'code', 'asset_id', 'quantity', 'borrower_id', 'purpose', 'start_date',
-        'due_date', 'returned_at', 'status', 'approved_by', 'approved_at', 'notes',
+        'code',
+        'asset_id',
+        'room_id',
+        'building_id',
+        'borrowable_type',
+        'quantity',
+        'borrower_id',
+        'purpose',
+        'start_date',
+        'due_date',
+        'returned_at',
+        'status',
+        'approved_by',
+        'approved_at',
+        'notes',
     ];
 
     protected function casts(): array
@@ -34,6 +53,16 @@ class Loan extends Model
     public function asset(): BelongsTo
     {
         return $this->belongsTo(Asset::class);
+    }
+
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(Room::class);
+    }
+
+    public function building(): BelongsTo
+    {
+        return $this->belongsTo(Building::class);
     }
 
     public function borrower(): BelongsTo
@@ -60,6 +89,90 @@ class Loan extends Model
     public function statusLabel(): string
     {
         return $this->isOverdue() ? 'Terlambat' : (self::STATUSES[$this->status] ?? $this->status);
+    }
+
+    public function facilityName(): string
+    {
+        if ($this->building_id && $this->building) {
+            return $this->building->name;
+        }
+
+        if ($this->room_id && $this->room) {
+            return $this->room->name;
+        }
+
+        if ($this->asset_id && $this->asset) {
+            return $this->asset->name;
+        }
+
+        return 'Fasilitas';
+    }
+
+    public function facilityCode(): string
+    {
+        if ($this->building_id && $this->building) {
+            return $this->building->code;
+        }
+
+        if ($this->room_id && $this->room) {
+            return $this->room->code;
+        }
+
+        if ($this->asset_id && $this->asset) {
+            return $this->asset->code;
+        }
+
+        return '-';
+    }
+
+    public function facilityType(): string
+    {
+        if ($this->borrowable_type) {
+            return $this->borrowable_type;
+        }
+
+        if ($this->building_id) {
+            return 'gedung';
+        }
+
+        if ($this->room_id && $this->room) {
+            return $this->room->type === 'kelas' ? 'kelas' : 'ruangan';
+        }
+
+        return $this->asset_id ? 'aset' : 'ruangan';
+    }
+
+    public function facilityTypeLabel(): string
+    {
+        $type = $this->facilityType();
+
+        return match ($type) {
+            'kelas' => 'Ruang Kelas',
+            'gedung' => 'Gedung',
+            'ruangan' => 'Ruangan / Lab',
+            'aset' => 'Aset Sarana',
+            default => 'Fasilitas',
+        };
+    }
+
+    public function facilityLocation(): string
+    {
+        if ($this->building_id && $this->building) {
+            return "Area Sekolah ({$this->building->code})";
+        }
+
+        if ($this->room_id && $this->room) {
+            $buildingName = $this->room->building?->name ?? 'Gedung Sekolah';
+            $floor = $this->room->floor ? " · Lt. {$this->room->floor}" : '';
+
+            return "{$buildingName}{$floor}";
+        }
+
+        if ($this->asset_id && $this->asset) {
+            return $this->asset->room?->name ?? 'Tanpa ruangan';
+        }
+
+        return 'MA Muhammadiyah';
     }
 
     public static function generateCode(): string

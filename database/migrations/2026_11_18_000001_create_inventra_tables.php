@@ -110,7 +110,10 @@ return new class extends Migration
         Schema::create('loans', function (Blueprint $table) {
             $table->id();
             $table->string('code', 40)->unique();
-            $table->foreignId('asset_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('asset_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('room_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('building_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->string('borrowable_type', 30)->default('ruangan');
             $table->unsignedInteger('quantity')->default(1);
             $table->foreignId('borrower_id')->constrained('users')->restrictOnDelete();
             $table->string('purpose');
