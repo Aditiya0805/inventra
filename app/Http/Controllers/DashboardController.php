@@ -185,6 +185,31 @@ class DashboardController extends Controller
         $buildings = Building::orderBy('name')->get(['id', 'name']);
         $availableRooms = Room::orderBy('name')->get(['id', 'name', 'building_id', 'floor']);
 
+        $user = $request->user();
+        $isTechnicianOrSuperAdmin = $user && in_array($user->role, ['super_admin', 'teknisi'], true);
+
+        $pendingDamageReports = $isTechnicianOrSuperAdmin
+            ? DamageTicket::query()
+                ->with(['asset:id,code,name', 'room:id,name', 'reporter:id,name'])
+                ->where('status', 'dilaporkan')
+                ->latest()
+                ->limit(6)
+                ->get()
+                ->map(fn (DamageTicket $t) => [
+                    'id' => $t->id,
+                    'code' => $t->code,
+                    'title' => $t->title,
+                    'description' => $t->description,
+                    'urgency' => $t->urgency,
+                    'urgency_label' => DamageTicket::URGENCIES[$t->urgency] ?? $t->urgency,
+                    'asset_name' => $t->asset?->name,
+                    'room_name' => $t->room?->name,
+                    'reporter_name' => $t->reporter?->name ?? 'Pengguna',
+                    'created_at' => $t->created_at->toISOString(),
+                    'created_at_human' => $t->created_at->diffForHumans(),
+                ])
+            : collect();
+
         return Inertia::render('Dashboard', [
             'kpi' => [
                 'rooms' => $rooms->count(),
@@ -208,6 +233,8 @@ class DashboardController extends Controller
             'dueLoans' => $dueLoans,
             'lowStocks' => $lowStocks,
             'todayBookings' => $todayBookings,
+            'pendingDamageReports' => $pendingDamageReports,
+            'canViewDamageAlerts' => $isTechnicianOrSuperAdmin,
             'filters' => $filters,
             'filterOptions' => [
                 'buildings' => $buildings,

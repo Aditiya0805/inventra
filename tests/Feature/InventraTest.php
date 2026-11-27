@@ -260,5 +260,48 @@ class InventraTest extends TestCase
         $this->assertNotNull($ticket->photo);
         Storage::disk('public')->assertExists($ticket->photo);
         $this->assertNotNull($ticket->photo_url);
+
+        $superAdmin = User::where('role', 'super_admin')->firstOrFail();
+        $teknisi = User::where('role', 'teknisi')->firstOrFail();
+        $sarpras = User::where('role', 'admin_sarpras')->firstOrFail();
+
+        $this->assertDatabaseHas('app_notifications', [
+            'user_id' => $superAdmin->id,
+            'title' => 'Laporan kerusakan baru',
+        ]);
+        $this->assertDatabaseHas('app_notifications', [
+            'user_id' => $teknisi->id,
+            'title' => 'Laporan kerusakan baru',
+        ]);
+        $this->assertDatabaseMissing('app_notifications', [
+            'user_id' => $sarpras->id,
+            'title' => 'Laporan kerusakan baru',
+        ]);
+    }
+
+    public function test_dashboard_damage_notifications_visible_only_for_super_admin_and_technician(): void
+    {
+        $superAdmin = User::where('role', 'super_admin')->firstOrFail();
+        $teknisi = User::where('role', 'teknisi')->firstOrFail();
+        $guru = User::where('role', 'guru')->firstOrFail();
+
+        $this->actingAs($superAdmin)->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Dashboard')
+                ->where('canViewDamageAlerts', true));
+
+        $this->actingAs($teknisi)->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Dashboard')
+                ->where('canViewDamageAlerts', true));
+
+        $this->actingAs($guru)->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Dashboard')
+                ->where('canViewDamageAlerts', false)
+                ->has('pendingDamageReports', 0));
     }
 }

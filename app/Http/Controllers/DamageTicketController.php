@@ -115,13 +115,17 @@ class DamageTicketController extends Controller
 
         AuditLogger::log('created', 'tiket_kerusakan', $ticket->id, "Melaporkan kerusakan: {$ticket->title} ({$ticket->code})");
 
-        $admins = Notifier::admins();
-        $technicians = Notifier::role(['teknisi']);
+        // Kirim notifikasi HANYA ke super_admin dan teknisi
+        $recipients = User::query()
+            ->whereIn('role', ['super_admin', 'teknisi'])
+            ->where('is_active', true)
+            ->get();
+
         Notifier::send(
-            $admins->merge($technicians),
+            $recipients,
             'Laporan kerusakan baru',
             "{$request->user()->name} melaporkan: {$ticket->title}.".($asset ? " Aset: {$asset->name}." : ''),
-            route('tickets.index'),
+            route('tickets.show', $ticket),
             $ticket->urgency === 'tinggi' ? 'danger' : 'warning',
         );
 

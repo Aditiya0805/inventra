@@ -623,7 +623,7 @@ class DatabaseSeeder extends Seeder
         // ——— Notifikasi ———
         $notifications = [
             [$adminSarpras, 'warning', '3 aset rusak di Ruang XII-2', 'Persentase aset rusak di Ruang XII-2 melewati ambang batas 15%. Segera lakukan pengecekan.', route('rooms.show', $rooms['A203'])],
-            [$adminSarpras, 'danger', 'Laporan kerusakan baru', 'Printer ruang guru dilaporkan macet oleh Maya Sari.', route('tickets.index')],
+            [$teknisi, 'danger', 'Laporan kerusakan baru', 'Printer ruang guru dilaporkan macet oleh Maya Sari.', route('tickets.index')],
             [$superAdmin, 'info', 'Pemesanan ruangan menunggu', 'Ada 2 pengajuan pemesanan ruangan yang menunggu persetujuan.', route('bookings.index')],
             [$guru, 'success', 'Peminjaman disetujui', 'Peminjaman proyektor untuk presentasi IPS telah disetujui.', route('loans.index')],
         ];

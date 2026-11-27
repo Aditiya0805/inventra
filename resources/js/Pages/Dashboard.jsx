@@ -101,7 +101,25 @@ function FilterBar({ filters, options }) {
     );
 }
 
-export default function Dashboard({ kpi, seats, devices, roomStatus, rooms, categoryChart, alerts, recentTickets, dueLoans, lowStocks, todayBookings, filters, filterOptions, threshold, today }) {
+export default function Dashboard({
+    kpi,
+    seats,
+    devices,
+    roomStatus,
+    rooms,
+    categoryChart,
+    alerts,
+    recentTickets,
+    dueLoans,
+    lowStocks,
+    todayBookings,
+    pendingDamageReports = [],
+    canViewDamageAlerts = false,
+    filters,
+    filterOptions,
+    threshold,
+    today,
+}) {
     const { auth } = usePage().props;
     const isAdmin = auth?.user?.is_admin;
     const seatPercent = percentage(seats.dipakai, seats.total);
@@ -127,6 +145,73 @@ export default function Dashboard({ kpi, seats, devices, roomStatus, rooms, cate
                     </>
                 }
             />
+
+            {canViewDamageAlerts && pendingDamageReports.length > 0 && (
+                <div className="mb-5 overflow-hidden rounded-2xl border border-rose-200 bg-gradient-to-r from-rose-50/90 via-amber-50/60 to-rose-50/90 p-4 shadow-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="relative grid size-10 shrink-0 place-items-center rounded-xl bg-rose-600 text-white shadow-md shadow-rose-600/20">
+                                <Wrench className="size-5" />
+                                <span className="absolute -top-1 -right-1 flex size-3">
+                                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-rose-400 opacity-75" />
+                                    <span className="relative inline-flex size-3 rounded-full bg-rose-600 ring-2 ring-white" />
+                                </span>
+                            </div>
+                            <div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <h3 className="text-sm font-bold text-slate-900">
+                                        Notifikasi Laporan Kerusakan Baru
+                                    </h3>
+                                    <span className="rounded-full bg-rose-600 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-xs">
+                                        {pendingDamageReports.length} tiket menunggu
+                                    </span>
+                                    <span className="text-[10px] font-medium text-slate-500">
+                                        (Khusus Teknisi &amp; Super Admin)
+                                    </span>
+                                </div>
+                                <p className="mt-0.5 text-xs text-slate-600">
+                                    Laporan kerusakan berikut baru saja dikirim oleh pengguna dan memerlukan verifikasi serta tindak lanjut teknisi.
+                                </p>
+                            </div>
+                        </div>
+
+                        <Link
+                            href="/tiket?status=dilaporkan"
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-700 hover:shadow"
+                        >
+                            Buka Semua Laporan <ArrowRight className="size-3.5" />
+                        </Link>
+                    </div>
+
+                    <div className="mt-3.5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                        {pendingDamageReports.slice(0, 3).map((report) => (
+                            <Link
+                                key={report.id}
+                                href={`/tiket/${report.id}`}
+                                className="group relative rounded-xl border border-rose-100 bg-white/95 p-3 shadow-xs transition hover:border-rose-300 hover:shadow-sm"
+                            >
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="font-mono text-[10px] font-bold text-rose-600">
+                                        {report.code}
+                                    </span>
+                                    <Badge status={report.urgency} />
+                                </div>
+                                <p className="mt-1 line-clamp-1 text-xs font-semibold text-slate-800 group-hover:text-rose-700">
+                                    {report.title}
+                                </p>
+                                <p className="mt-0.5 line-clamp-1 text-[11px] text-slate-500">
+                                    {report.asset_name ? report.asset_name : report.room_name ?? 'Fasilitas madrasah'}
+                                    {report.room_name && report.asset_name ? ` · ${report.room_name}` : ''}
+                                </p>
+                                <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2 text-[10px] text-slate-400">
+                                    <span>Pelapor: {report.reporter_name}</span>
+                                    <span>{report.created_at_human}</span>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <FilterBar filters={filters} options={filterOptions} />
 
