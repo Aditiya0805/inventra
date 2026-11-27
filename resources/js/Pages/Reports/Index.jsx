@@ -6,7 +6,6 @@ import {
     Boxes,
     CalendarDays,
     CheckCircle2,
-    ClipboardCheck,
     Download,
     FileSpreadsheet,
     FileText,
@@ -30,7 +29,7 @@ const TYPES = {
     kerusakan: 'Kerusakan & Biaya Perbaikan',
 };
 
-export default function ReportsIndex({ filters, report, rooms, categories, buildings, opnames }) {
+export default function ReportsIndex({ filters, report, rooms, categories, buildings }) {
     const [form, setForm] = useState({
         type: filters.type,
         from: filters.from,
@@ -156,23 +155,6 @@ export default function ReportsIndex({ filters, report, rooms, categories, build
             {filters.type === 'inventaris' && <InventarisReport report={report} />}
             {filters.type === 'kerusakan' && <KerusakanReport report={report} />}
             {filters.type === 'pemanfaatan' && <PemanfaatanReport report={report} />}
-
-            {opnames?.length > 0 && (
-                <Card className="mt-5">
-                    <CardHeader title="Stock opname terakhir" description="Riwayat pencocokan fisik terbaru" icon={ClipboardCheck} />
-                    <div className="flex flex-wrap divide-y divide-slate-50 sm:divide-y-0">
-                        {opnames.map((opname) => (
-                            <div key={opname.id} className="min-w-52 flex-1 border-slate-100 px-5 py-3 sm:border-r last:sm:border-r-0">
-                                <p className="font-mono text-[10px] text-slate-400">{opname.code}</p>
-                                <p className="mt-0.5 text-xs font-semibold text-slate-800">{opname.room?.name ?? '—'}</p>
-                                <p className="text-[10px] text-slate-400">
-                                    {new Date(opname.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} · {opname.status === 'selesai' ? 'Selesai' : 'Draft'}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                </Card>
-            )}
         </AppLayout>
     );
 }
@@ -186,7 +168,7 @@ function InventarisReport({ report }) {
                 <StatCard label="Total Unit" value={formatNumber(report.total_quantity)} hint={`${formatNumber(report.asset_records)} catatan aset`} icon={Boxes} tone="brand" />
                 <StatCard label="Rusak & Hilang" value={formatNumber(damaged)} hint={`${formatNumber(report.damaged)} rusak · ${formatNumber(report.repair ?? 0)} perbaikan`} icon={AlertTriangle} tone="rose" />
                 <StatCard label="Nilai Inventaris" value={formatCurrency(report.value, true)} hint="Nilai perolehan aset" icon={Wallet} tone="violet" />
-                <StatCard label="Aktivitas" value={formatNumber(report.mutations)} hint={`${formatNumber(report.opname_count)} stock opname`} icon={ArrowLeftRight} tone="blue" />
+                <StatCard label="Aktivitas" value={formatNumber(report.mutations)} hint="Total mutasi aset" icon={ArrowLeftRight} tone="blue" />
             </div>
 
             <div className="mt-5 grid gap-5 xl:grid-cols-3">

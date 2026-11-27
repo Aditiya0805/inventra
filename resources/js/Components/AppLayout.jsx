@@ -8,7 +8,6 @@ import {
     CalendarDays,
     Check,
     ChevronDown,
-    ClipboardCheck,
     DoorOpen,
     LayoutDashboard,
     LogOut,
@@ -38,7 +37,6 @@ const NAV = [
         items: [
             { label: 'Data Aset', href: '/aset', icon: Boxes },
             { label: 'Mutasi Aset', href: '/mutasi', icon: ArrowLeftRight },
-            { label: 'Stock Opname', href: '/opname', icon: ClipboardCheck, roles: ['super_admin', 'admin_sarpras'] },
         ],
     },
     {

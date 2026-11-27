@@ -38,7 +38,6 @@ const ENTITY_LABELS = {
     peminjaman: 'Peminjaman',
     tiket_kerusakan: 'Tiket Kerusakan',
     mutasi_aset: 'Mutasi Aset',
-    stock_opname: 'Stock Opname',
     pengguna: 'Pengguna',
     pengaturan: 'Pengaturan',
     auth: 'Autentikasi',

@@ -49,7 +49,6 @@ class InventraTest extends TestCase
 
         $this->actingAs($viewer)->get('/laporan')->assertOk();
         $this->actingAs($viewer)->get('/pengaturan')->assertForbidden();
-        $this->actingAs($viewer)->get('/opname')->assertForbidden();
         $this->actingAs($guru)->get('/laporan')->assertForbidden();
         $this->actingAs($admin)->get('/pengaturan')->assertOk();
         $this->actingAs($admin)->get('/log-aktivitas')->assertOk();

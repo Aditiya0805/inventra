@@ -163,28 +163,6 @@ return new class extends Migration
             $table->index(['status', 'urgency']);
         });
 
-        Schema::create('stock_opnames', function (Blueprint $table) {
-            $table->id();
-            $table->string('code', 40)->unique();
-            $table->foreignId('room_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->restrictOnDelete();
-            $table->date('date');
-            $table->string('status', 20)->default('draft');
-            $table->text('notes')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('stock_opname_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('stock_opname_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('asset_id')->constrained()->cascadeOnDelete();
-            $table->unsignedInteger('system_qty')->default(0);
-            $table->unsignedInteger('counted_qty')->default(0);
-            $table->integer('difference')->default(0);
-            $table->text('note')->nullable();
-            $table->timestamps();
-        });
-
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
@@ -228,8 +206,6 @@ return new class extends Migration
         Schema::dropIfExists('app_notifications');
         Schema::dropIfExists('settings');
         Schema::dropIfExists('audit_logs');
-        Schema::dropIfExists('stock_opname_items');
-        Schema::dropIfExists('stock_opnames');
         Schema::dropIfExists('damage_tickets');
         Schema::dropIfExists('room_bookings');
         Schema::dropIfExists('loans');

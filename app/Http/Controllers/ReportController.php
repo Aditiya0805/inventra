@@ -10,7 +10,6 @@ use App\Models\DamageTicket;
 use App\Models\Loan;
 use App\Models\Room;
 use App\Models\RoomBooking;
-use App\Models\StockOpname;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -33,7 +32,6 @@ class ReportController extends Controller
             'rooms' => Room::with('building:id,name')->orderBy('name')->get(['id', 'name', 'building_id']),
             'categories' => AssetCategory::orderBy('name')->get(['id', 'name']),
             'buildings' => Building::orderBy('name')->get(['id', 'name']),
-            'opnames' => StockOpname::with('room:id,name')->latest('date')->limit(5)->get(),
         ]);
     }
 
@@ -251,7 +249,6 @@ class ReportController extends Controller
             'by_room' => $byRoom,
             'by_category' => $byCategory,
             'mutations' => AssetMutation::whereBetween('moved_at', [$from, $to])->count(),
-            'opname_count' => StockOpname::whereBetween('date', [$from, $to])->count(),
         ];
     }
 

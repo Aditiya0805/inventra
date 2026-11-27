@@ -18,7 +18,6 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoomBookingController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\SettingController;
-use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -86,15 +85,6 @@ Route::middleware('auth')->group(function () {
     // Mutasi
     Route::get('/mutasi', [MutationController::class, 'index'])->name('mutations.index');
     Route::post('/mutasi', [MutationController::class, 'store'])->name('mutations.store')->middleware('role:super_admin,admin_sarpras');
-
-    // Stock opname
-    Route::middleware('role:super_admin,admin_sarpras')->group(function () {
-        Route::get('/opname', [StockOpnameController::class, 'index'])->name('opnames.index');
-        Route::post('/opname', [StockOpnameController::class, 'store'])->name('opnames.store');
-        Route::get('/opname/{opname}', [StockOpnameController::class, 'show'])->name('opnames.show');
-        Route::put('/opname/{opname}', [StockOpnameController::class, 'update'])->name('opnames.update');
-        Route::delete('/opname/{opname}', [StockOpnameController::class, 'destroy'])->name('opnames.destroy');
-    });
 
     // Laporan
     Route::middleware('role:super_admin,admin_sarpras,viewer')->group(function () {

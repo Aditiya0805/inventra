@@ -13,8 +13,6 @@ use App\Models\Loan;
 use App\Models\Room;
 use App\Models\RoomBooking;
 use App\Models\Setting;
-use App\Models\StockOpname;
-use App\Models\StockOpnameItem;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -610,33 +608,6 @@ class DatabaseSeeder extends Seeder
             'moved_at' => now()->subDays(2),
         ]);
 
-        // ——— Stock opname ———
-        $opname = StockOpname::create([
-            'code' => 'OPN-'.now()->format('Ym').'-001',
-            'room_id' => $rooms['A101']->id,
-            'user_id' => $adminSarpras->id,
-            'date' => now()->subDays(6),
-            'status' => 'selesai',
-            'notes' => 'Stock opname rutin bulanan ruang 7A.',
-        ]);
-
-        foreach (Asset::where('room_id', $rooms['A101']->id)->with('stock')->get() as $asset) {
-            $systemQty = $asset->isBulk() ? ($asset->stock?->total ?? 0) : 1;
-            $counted = $systemQty;
-            if ($asset->id === $kursi7A->id) {
-                $counted = max(0, $systemQty - 1);
-            }
-
-            StockOpnameItem::create([
-                'stock_opname_id' => $opname->id,
-                'asset_id' => $asset->id,
-                'system_qty' => $systemQty,
-                'counted_qty' => $counted,
-                'difference' => $counted - $systemQty,
-                'note' => $counted !== $systemQty ? 'Satu kursi tidak ditemukan saat pengecekan.' : null,
-            ]);
-        }
-
         // ——— Pengaturan ———
         $settings = [
             'school_name' => 'MA Muhammadiyah Bandar Lampung',
@@ -682,7 +653,6 @@ class DatabaseSeeder extends Seeder
             [$adminSarpras, 'created', 'mutasi_aset', 1, 'Memutasi 4 Kursi Siswa dari Ruang 7A ke Ruang 7B', now()->subDays(5)],
             [$superAdmin, 'login', 'pengguna', $superAdmin->id, $superAdmin->name.' masuk ke aplikasi', now()->subHours(2)],
             [$adminSarpras, 'updated', 'pengaturan', null, 'Memperbarui ambang peringatan dan notifikasi', now()->subHours(8)],
-            [$adminSarpras, 'created', 'stock_opname', $opname->id, 'Memulai stock opname OPN-202611-001 di Ruang 7A', now()->subDays(6)],
         ];
 
         foreach ($auditItems as [$user, $action, $entity, $entityId, $description, $at]) {
